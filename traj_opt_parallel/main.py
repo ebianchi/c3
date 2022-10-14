@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 from path_matlab import*
 from QP_function import*
-from Projection_function import*
 from Projection_function2 import*
-from Projection_function3 import*
 import numpy, scipy.io
 
 
@@ -59,12 +57,12 @@ for i in range(system_iter):
     
     if i % 15 == 0:
         delta = 0*np.ones((N*(n+k+m) + n,1))
+        
     #ADMM
     if i % 6 == 0:
-        #delta = 0*np.ones((N*(n+k+m) + n,1))
 
         for j in range(N):
-                delta[(n+m+k)*j:(n+m+k)*j + n] = x[:, [i]]
+            delta[(n+m+k)*j:(n+m+k)*j + n] = x[:, [i]]
                 
         omega = 0*np.ones((N*(n+k+m) + n,1))
         G = rho*np.eye(n+m+k)
@@ -76,23 +74,16 @@ for i in range(system_iter):
             z = np.reshape(z, (np.size(z,0),1))
             
             t_qp[:, [i]] = t_diff_qp
-            
-            #print(j)
     
             
             #PROJECTION STEP
-            #delta = Projection_function(z, delta, omega, N)
-            delta, t_diff = Projection_function2(z, delta, omega, N, G, A,B,D,d,E,c,F,H)
-            #delta, t_diff = Projection_function3(z, delta, omega, N, A,B,D,d,E,c,F,H)
-           
+            delta, t_diff = Projection_function2(z, delta, omega, N, G, A,B,D,d,E,c,F,H)           
             
             t_calc[:, [i]] = t_diff
             
             #UPDATE STEP
             omega = omega + z - delta
-            #for cartpole
-            #omega[0:6] = np.zeros((n,1))
-            #rho = rho * rho_scale
+
             G = G * rho_scale
             omega = omega / rho_scale
     
@@ -105,13 +96,6 @@ for i in range(system_iter):
     #calculate q
     q = E @ x[:, [i]] + H @ u + c
 
-    
-    #use pathlcp
-    # F = torch.from_numpy(F)
-    # q = torch.from_numpy(q)
-    # sol_lcp = solve_lcp_path(F, q)
-    # sol_lcp = sol_lcp.detach().cpu().numpy()
-    # lam[:,[i]] = sol_lcp
        
     cp[0,i] = xcur[2] - np.cos( xcur[4] ) - np.sin(  xcur[4] )
     
@@ -138,16 +122,16 @@ plt.plot(time_x, x[[0,2,4,6,8],:].T)
 plt.legend(['x','y','theta','finger_top','finger bottom'])
 plt.show()
 
-# plt.plot(cp.T)
-# plt.show()
+plt.plot(cp.T)
+plt.show()
 
-# plt.figure()
-# plt.plot(phinext.T)
-# plt.plot(linear_phinext.T)
-# #plt.xlim([20,40])
-# #plt.ylim([-0.01, 0.02])
-# plt.legend(['real(gap)','linearization (gap)'])
-# plt.show()
+plt.figure()
+plt.plot(phinext.T)
+plt.plot(linear_phinext.T)
+#plt.xlim([20,40])
+#plt.ylim([-0.01, 0.02])
+plt.legend(['real(gap)','linearization (gap)'])
+plt.show()
 
 
 print(np.mean(t_calc[t_calc != 0]  ))
